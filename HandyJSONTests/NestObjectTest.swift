@@ -42,7 +42,7 @@ class NestObjectTest: XCTestCase {
         var age: Int?
         var height: Int?
         var gender: Gender?
-    
+
         required init() {}
     }
 
@@ -100,7 +100,7 @@ class NestObjectTest: XCTestCase {
          }
         **/
         let jsonString = "{\"id\":\"77544\",\"name\":\"Tom Li\",\"age\":18,\"height\":180,\"gender\":\"Male\",\"className\":\"A\",\"teacher\":{\"name\":\"Lucy He\",\"age\":28,\"height\":172,\"gender\":\"Female\",},\"subject\":[{\"name\":\"math\",\"id\":18000324583,\"credit\":4,\"lessonPeriod\":48},{\"name\":\"computer\",\"id\":18000324584,\"credit\":8,\"lessonPeriod\":64}],\"seat\":\"4-3-23\"}"
-        let student = JSONDeserializer<Student>.deserializeFrom(json: jsonString)!
+        let student = Student.deserialize(from: jsonString)!
         XCTAssert(student.id == "77544")
         XCTAssert(student.name == "Tom Li")
         XCTAssert(student.age == 18)
@@ -120,5 +120,29 @@ class NestObjectTest: XCTestCase {
         XCTAssert(student.subject?.last?.credit == 8)
         XCTAssert(student.subject?.last?.lessonPeriod == 64)
         XCTAssert(student.seat == "4-3-23")
+    }
+
+    func testForIssue76(){
+        // https://github.com/alibaba/HandyJSON/issues/76
+        struct A :HandyJSON{
+            var p = Array<P>()
+        }
+        struct P:HandyJSON{
+            var name = "dddd"
+        }
+
+        let a = A(p:[P(), P()])
+
+        let jsonstr = a.toJSONString()
+        XCTAssert(jsonstr?.countOf(char: "d") == 8)
+        XCTAssert(jsonstr == "{\"p\":[{\"name\":\"dddd\"},{\"name\":\"dddd\"}]}")
+
+    }
+
+}
+
+extension String{
+    func countOf(char: Character) -> Int{
+        return characters.filter{ $0 == char }.count
     }
 }
